@@ -1,1 +1,1 @@
-m.main()
+ len(initial_state[0])
