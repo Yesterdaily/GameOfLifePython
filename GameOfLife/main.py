@@ -4,15 +4,17 @@ import pygame
 import sys
 import pandas as pd
 import time
+import asyncio
 
 BLACK = (76, 31, 122)
 WHITE = (255, 128, 0)
-WINDOW_HEIGHT = 700
-WINDOW_WIDTH = 700
+WINDOW_HEIGHT = 800
+WINDOW_WIDTH = 1500
+MODE = True
 
 
 def random_state(width, height):
-    board_state = np.random.choice([0, 1], size=(height, width), p=[0.95, 0.05])
+    board_state = np.random.choice([0, 1], size=(height, width), p=[0.7, 0.3])
     return board_state
 
 def dead_state(width, height):
@@ -53,7 +55,7 @@ def check_neighbors(array, x, y):
                     neighbors += 1
     return neighbors
 
-def next_board_state(initial_state):
+async def next_board_state(initial_state):
     new_state = dead_state(len(initial_state[0]),len(initial_state))
     for x, sub in enumerate(initial_state):
         for y, element in enumerate(sub):
@@ -64,18 +66,24 @@ def next_board_state(initial_state):
                 new_state[x][y] = 1
             elif element == 1 and 2<= neighbors <=3:
                 new_state[x][y] = 1
+    await asyncio.sleep(0)
     return new_state
 
-def drawGrid(board_state):
+async def drawGrid(board_state):
     blockSize = 5 #Set the size of the grid block
     for x, sub in enumerate(board_state):
         for y, element in enumerate(sub):
             rect = pygame.Rect(x*blockSize, y*blockSize, blockSize, blockSize)
             pygame.draw.rect(SCREEN, BLACK, rect, element)
+    await asyncio.sleep(0)
 
-def main():
-    test_board = load_board_state("./test.txt")
-    board_state = random_state(140,140)
+async def main():
+    if MODE:
+        board_state = random_state(160,300)
+    else:
+        board_state = load_board_state("./test.txt")
+    
+    
     global SCREEN, CLOCK
     pygame.init()
     SCREEN = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -83,9 +91,11 @@ def main():
     SCREEN.fill(WHITE)
 
     while True:
-        next_state = next_board_state(board_state)
-        drawGrid(next_state)
-        time.sleep(0.5)
+
+        next_state = await next_board_state(board_state)
+        await drawGrid(next_state)
+
+
         board_state = next_state
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -94,8 +104,9 @@ def main():
 
         pygame.display.update()
         SCREEN.fill(WHITE)
+        await asyncio.sleep(0.0001) #control speed
      
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
     #testing.testThing()
